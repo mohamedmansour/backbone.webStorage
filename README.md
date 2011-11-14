@@ -16,10 +16,7 @@ This is an extremely messy way to create ORM for SQL in JS.
 Usage
 -----
 
- - Create your Entity, it will automatically create the table when
-   initialized.
-
-<code>
+Create your Entity, it will automatically create the table when initialized.
 
     ArticleEntity = function(db) {
         AbstractEntity.call(this, db, 'article');
@@ -49,11 +46,9 @@ Usage
          ]
        };
     };
-</code>
 
- - Test your entity by adding some values. You can use any CRUD method.
 
-<code>
+Test your entity by adding some values. You can use any CRUD method.
 
     var db = openDatabase('Some Test', '1.0', 'test', 2 * 1024 * 1024);
     var entity = new PersonCircle
@@ -63,4 +58,4 @@ Usage
         var articleEntity = new ArticleEntity(db);
         articleEntity.create({author: 'Mohamed Mansour', title: 'Hello World', category: res.data}
     });
-</code>
+
