@@ -328,9 +328,10 @@ AbstractEntity.prototype.save = function(obj, callback) {
     }
   });
 };
- 
-// Override `Backbone.sync` to use delegate to the model or collection's
-// *webStorage* property, which should be an instance of `Store`.
+
+/**
+ * Override `Backbone.sync` to use delegate to the model or collection's  *webStorage* property
+ */
 Backbone.sync = function(method, model, options, error) {
 
   // Backwards compatibility with Backbone <= 0.3.3
