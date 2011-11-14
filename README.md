@@ -19,48 +19,48 @@ Usage
  - Create your Entity, it will automatically create the table when
    initialized.
 
+<code>
+
     ArticleEntity = function(db) {
-      AbstractEntity.call(this, db, 'article');
+        AbstractEntity.call(this, db, 'article');
     };
     inherits(ArticleEntity, AbstractEntity);
-
+  
     ArticleEntity.prototype.tableDefinition = function() {
-      return {
-        author: 'TEXT',
-        title: 'TEXT',
-        summary: 'TEXT'
-        category: {type: 'NUMBER', foreign: 'category'}
-      };
+       return {
+         author: 'TEXT',
+         title: 'TEXT',
+         summary: 'TEXT'
+         category: {type: 'NUMBER', foreign: 'category'}
+       };
     }
-
-
+    
+    
     CategoryEntity = function(db) {
-       AbstractEntity.call(this, db, 'category');
+        AbstractEntity.call(this, db, 'category');
     };
     inherits(CategoryEntity, AbstractEntity);
-
     CategoryEntity.prototype.tableDefinition = function() {
-      return {
-        name: 'TEXT',
-        description: 'TEXT',
-        unique: [
-          ['name']
-        ]
-      };
+       return {
+         name: 'TEXT',
+         description: 'TEXT',
+         unique: [
+           ['name']
+         ]
+       };
     };
-
+</code>
 
  - Test your entity by adding some values. You can use any CRUD method.
 
+<code>
 
     var db = openDatabase('Some Test', '1.0', 'test', 2 * 1024 * 1024);
     var entity = new PersonCircle
-
     var categoryEntity = new CategoryEntity(db);
     categoryEntity.create({name: 'Technology'});
     categoryEntity.create({name: 'Science', description: 'Hardcore historical science'}, function(res) {
-      var articleEntity = new ArticleEntity(db);
-      articleEntity.create({author: 'Mohamed Mansour', title: 'Hello World', category: res.data}
+        var articleEntity = new ArticleEntity(db);
+        articleEntity.create({author: 'Mohamed Mansour', title: 'Hello World', category: res.data}
     });
-
-    
+</code>
