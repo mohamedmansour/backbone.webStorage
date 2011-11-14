@@ -3,7 +3,6 @@
  * 
  * @author Mohamed Mansour http://mohamedmansour.com
  */
-
 /**
  * Represents a table entity.
  *
@@ -26,19 +25,35 @@ AbstractEntity = function(db, name) {
 AbstractEntity.prototype.tableDefinition = function() {};
 
 /**
- *
+ * 
  * @param {function(!Object)} callback The listener to call when completed.
  */
 AbstractEntity.prototype.initialize = function(callback) {
   var self = this;
   var obj = this.tableDefinition();
   var sql = [];
+  var indexes = [];
   sql.push('id TEXT PRIMARY KEY');
   for (var key in obj) {
     if (obj.hasOwnProperty(key)) {
-      sql.push(key + ' ' + obj[key]);
+      var val = obj[key];
+      if (_.isString(val)) {
+        sql.push(key + ' ' + val);
+      }
+      else if (key == 'unique') {
+          _.each(val, function(uniqueItem) {
+            sql.push('UNIQUE (' + uniqueItem.join(', ') + ')');
+          });
+      }
+      else { // detailed column
+        sql.push(key + ' ' + val.type);
+        if (val.foreign) {
+          indexes.push('FOREIGN KEY (' + key + ') REFERENCES ' + val.foreign + ' (id)');
+        }
+      }
     }
   }
+  sql = sql.concat(indexes);
   sql.push('UNIQUE (id)');
   this.db.transaction(function(tx) {
     tx.executeSql('CREATE TABLE IF NOT EXISTS ' + self.name + '(' + sql.join(',') + ')', [],
@@ -46,6 +61,7 @@ AbstractEntity.prototype.initialize = function(callback) {
         self.fireCallback({status: true, data: 'Success'}, callback);
       }, 
       function(tx, e) {
+        console.error(self.name, 'Initialize', e.message);
         self.fireCallback({status: false, data: 'Cannot create table'}, callback);
     });
   });
@@ -63,6 +79,7 @@ AbstractEntity.prototype.drop = function(callback) {
         self.fireCallback({status: true, data: 'Success'}, callback);
       }, 
       function(tx, e) {
+        console.error(self.name, 'Drop', e.message);
         self.fireCallback({status: false, data: 'Cannot drop table'}, callback);
     });
   });
@@ -108,6 +125,7 @@ AbstractEntity.prototype.clear = function(callback) {
     tx.executeSql(sql, [], function(tx, rs) {
         self.fireCallback({status: true, data: rs}, callback);
       }, function(tx, e) {
+        console.error(self.name, 'Clear', e.message);
         self.fireCallback({status: false, data: e.message}, callback);
       }
     );
@@ -144,6 +162,7 @@ AbstractEntity.prototype.create = function(obj, callback) {
           if (!id) id = rs.insertId;
           self.fireCallback({status: true, data: rs, id: id}, callback);
         }, function(tx, e) {
+          console.error(self.name, 'Create', e.message, sql, values);
           self.fireCallback({status: false, data: e.message}, callback);
         }
       );
@@ -163,6 +182,7 @@ AbstractEntity.prototype.destroy = function(id, callback) {
     tx.executeSql(sql, [id], function(tx, rs) {
         self.fireCallback({status: true, data: rs}, callback);
       }, function(tx, e) {
+        console.error(self.name, 'Destroy', e.message);
         self.fireCallback({status: false, data: e.message}, callback);
       }
     );
@@ -212,6 +232,7 @@ AbstractEntity.prototype.update = function(obj, callback) {
       tx.executeSql(sql, data, function(tx, rs) {
           self.fireCallback({status: true, data: rs}, callback);
         }, function(tx, e) {
+          console.error(self.name, 'Update', e.message);
           self.fireCallback({status: false, data: e.message}, callback);
         }
       );
@@ -245,8 +266,8 @@ AbstractEntity.prototype.find = function(obj, callback) {
           data.push(rs.rows.item(i));
         }
         self.fireCallback({status: true, data: data}, callback);
-      }, function(e) {
-        console.error('Find', e.message);
+      }, function(tx, e) {
+        console.error(self.name, 'Find', e.message);
         self.fireCallback({status: false, data: e.message}, callback);
       }
     );
@@ -285,7 +306,7 @@ AbstractEntity.prototype.count = function(obj, callback) {
         var count = rs.rows.item(0).count;
         self.fireCallback({status: true, data: count}, callback);
       }, function(e) {
-        console.error('Count', e.message);
+        console.error(self.name, 'Count', e.message);
         self.fireCallback({status: false, data: e.message}, callback);
       }
     );
@@ -300,7 +321,7 @@ AbstractEntity.prototype.save = function(obj, callback) {
   var self = this;
   self.count({id: obj.id}, function(result) {
     if (result.data == 0) {
-      self.persist(obj, callback);
+      self.create(obj, callback);
     }
     else {
       self.update(obj, callback);
